@@ -1,0 +1,5 @@
+node_modules
+canine_shelter
+package.json
+package-lock.json
+.env
