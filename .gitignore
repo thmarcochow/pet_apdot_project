@@ -1,5 +1,6 @@
 node_modules
-canine_shelter
+canine_shelter/node_modules
 package.json
 package-lock.json
 .env
+server.js.bak
