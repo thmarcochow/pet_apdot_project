@@ -40,3 +40,11 @@ button{
 /* -------------- Dogs ---------------*/
 
 @import url("./components/mainpages/dogs/Dogs.css");
+
+/* -------------- DetailDog ---------------*/
+
+@import url("./components/mainpages/detailDog/DetailDog.css");
+
+/* -------------- Login/Register ---------------*/
+
+@import url("./components/mainpages/auth/login.css");

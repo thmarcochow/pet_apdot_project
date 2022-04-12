@@ -1,5 +1,6 @@
 import React from 'react'
 import {Link} from 'react-router-dom'
+import BtnRender from './../utils/BtnRender'
 
 function GetDogItem({getDog}) {
   return (
@@ -10,14 +11,7 @@ function GetDogItem({getDog}) {
             <span>${getDog.dog_id}</span>
             <p>${getDog.dog_dob}</p>
         </div>
-        <div className='row_btn'>
-            <Link id="btn_buy" to="#!">
-                Buy
-            </Link>
-            <Link id="btn_view" to={`detail/${getDog._id}`}>
-                View
-            </Link>
-        </div>
+        <BtnRender getDog={getDog}/>
     </div>
   )
 }

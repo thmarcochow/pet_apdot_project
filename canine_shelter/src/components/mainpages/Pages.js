@@ -1,15 +1,18 @@
 import React from 'react'
 import {Switch, Route} from 'react-router-dom'
 import Dogs from './dogs/Dogs'
+import DetailDog from './detailDog/DetailDog'
 import Login from './auth/Login'
 import Register from './auth/Register'
 import Shelter from './shelter/Shelter'
 import NotFound from './utils/NotFound'
 
+
 function Pages() {
   return (
     <Switch>
       <Route path="/" exact component={Dogs}/>
+      <Route path="/detail/:id" exact component={DetailDog}/>
       <Route path="/login" exact component={Login}/>
       <Route path="/register" exact component={Register}/>
       <Route path="/shelter" exact component={Shelter}/>
