@@ -1,10 +1,10 @@
 const mongoose = require('mongoose')
 
 const userSchema = new mongoose.Schema({
-    username: {
+    name: {
         type: String,
         required: true,
-        unique: true
+        trim: true
     },
     email: {
         type: String,
@@ -23,4 +23,4 @@ const userSchema = new mongoose.Schema({
     timestamps: true
 })
 
-module.exports = mongoose.model('ShelterUsers', userSchema)
+module.exports = mongoose.model('Users', userSchema)

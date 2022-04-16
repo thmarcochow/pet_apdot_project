@@ -1,87 +1,79 @@
-const ShelterUsers = require('../models/userModels')
+const Users = require('../models/userModels')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken');
 
 
 const userCtrl = {
-    register: async (req, res) => {
+    register: async (req, res) =>{
         try {
-            const {username, email, password} = req.body;
+            const {name, email, password} = req.body;
 
-            const CheckEmail = await ShelterUsers.findOne({email}).lean()
-            const user = await ShelterUsers.findOne({username}).lean()
-            if(CheckEmail) { 
-                return res.json({msg: "This email was registered already."})
-            } else if(user) {
-                return res.json({msg: "This username has been used, please try again!"})
-            } else if (password.length < 10) {
-                return res.json({msg: "Password is at least 10 char."})
-            } /* else {
-                res.json({msg: "Register Success!"})
-            } */
-            //  Encrypt the password by using bcrypt
+            const user = await Users.findOne({email})
+            if(user) return res.status(400).json({msg: "The email already exists."})
+
+            if(password.length < 6) 
+                return res.status(400).json({msg: "Password is at least 6 characters long."})
+
+            // Password Encryption
             const passwordHash = await bcrypt.hash(password, 10)
-            const newCreateUser = new ShelterUsers({username, email, password: passwordHash})
-            
-            // Save the new created user into mongodb
-            await newCreateUser.save()
+            const newUser = new Users({
+                name, email, password: passwordHash
+            })
 
-            //create jsonwebtoken to auth
-            const accesstoken = createAccessToken({id: newCreateUser._id})
-            const refreshtoken = createRefreshToken({id: newCreateUser._id})
+            // Save mongodb
+            await newUser.save()
+
+            // Then create jsonwebtoken to authentication
+            const accesstoken = createAccessToken({id: newUser._id})
+            const refreshtoken = createRefreshToken({id: newUser._id})
 
             res.cookie('refreshtoken', refreshtoken, {
                 httpOnly: true,
-                path: '/user/refresh_token'
-                
+                path: '/user/refresh_token',
+                maxAge: 7*24*60*60*1000 // 7d
             })
 
-            res.json({user, accesstoken})
+            res.json({accesstoken})
 
         } catch (err) {
-            return res.json({msg: err.message})
+            return res.status(500).json({msg: err.message})
         }
     },
-    Login: async (req, res) => {
+    login: async (req, res) =>{
         try {
-            const {username, password} = req.body;
-            const user = await ShelterUsers.findOne({username})//.lean()
-            const compareUser = await bcrypt.compare(password, user.password)
+            const {email, password} = req.body;
 
-            //create jsonwebtoken to auth
+            const user = await Users.findOne({email})
+            if(!user) return res.status(400).json({msg: "User does not exist."})
+
+            const isMatch = await bcrypt.compare(password, user.password)
+            if(!isMatch) return res.status(400).json({msg: "Incorrect password."})
+
+            // If login success , create access token and refresh token
             const accesstoken = createAccessToken({id: user._id})
             const refreshtoken = createRefreshToken({id: user._id})
-            
+
             res.cookie('refreshtoken', refreshtoken, {
                 httpOnly: true,
-                path: '/user/refresh_token'
+                path: '/user/refresh_token',
+                maxAge: 7*24*60*60*1000 // 7d
             })
 
-            if(!user) {
-                return res.status(400).json({msg: "This user does not exist. Please try again!"})
-            }// else 
-            if (!compareUser) {
-                return res.json({msg: "Incorrect Password"})
-            } else {
-                res.json({accesstoken})
-                //res.json({msg: "Login Success"})
-                
-            }
-            
+            res.json({accesstoken})
+
         } catch (err) {
-            return res.json({msg: "Error: "+err.message})
+            return res.status(500).json({msg: err.message})
         }
-        
     },
-    Logout: async (req, res) => {
+    logout: async (req, res) =>{
         try {
             res.clearCookie('refreshtoken', {path: '/user/refresh_token'})
             return res.json({msg: "Logged out"})
         } catch (err) {
-            return res.json({msg: err.message})
+            return res.status(500).json({msg: err.message})
         }
     },
-    refreshToken: (req, res) => {
+    refreshToken: (req, res) =>{
         try {
             const rf_token = req.cookies.refreshtoken;
             if(!rf_token) return res.status(400).json({msg: "Please Login or Register"})
@@ -95,19 +87,18 @@ const userCtrl = {
             })
 
         } catch (err) {
-            return res.json({msg: err.message})
+            return res.status(500).json({msg: err.message})
         }
         
     },
-    getUser: async (req, res) => {
+    getUser: async (req, res) =>{
         try {
-            const user = await ShelterUsers.findById(req.user.id).select('-password')
-            if(!user){
-                return res.json({msg: "User does not exist."})
-            }
+            const user = await Users.findById(req.user.id).select('-password')
+            if(!user) return res.status(400).json({msg: "User does not exist."})
+
             res.json(user)
         } catch (err) {
-            return res.json({msg: err.message})
+            return res.status(500).json({msg: err.message})
         }
     }
 }
